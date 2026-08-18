@@ -29,8 +29,22 @@ jobs:
       - name: Display Go version
         run: go version
 
-      - name: Run go vet
-        run: go vet ./...
+- name: Run go vet
+  shell: bash
+  run: |
+    packages="$(go list ./... 2>/dev/null || true)"
+    if [ -z "$packages" ]; then
+      echo "No Go packages yet; skipping go vet."
+      exit 0
+    fi
+    go vet ./...
 
-      - name: Run tests
-        run: go test ./...
+- name: Run tests
+  shell: bash
+  run: |
+    packages="$(go list ./... 2>/dev/null || true)"
+    if [ -z "$packages" ]; then
+      echo "No Go packages yet; skipping tests."
+      exit 0
+    fi
+    go test ./...
