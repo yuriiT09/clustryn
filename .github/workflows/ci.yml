@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Display Go version
+        run: go version
+
+      - name: Check for Go packages
+        id: packages
+        shell: bash
+        run: |
+          if [ -n "$(go list ./... 2>/dev/null)" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No Go packages exist yet."
+          fi
+
+      - name: Run go vet
+        if: steps.packages.outputs.exists == 'true'
+        run: go vet ./...
+
+      - name: Run tests
+        if: steps.packages.outputs.exists == 'true'
+        run: go test ./...
