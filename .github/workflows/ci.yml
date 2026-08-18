@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
@@ -12,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
 
@@ -29,22 +30,21 @@ jobs:
       - name: Display Go version
         run: go version
 
-- name: Run go vet
-  shell: bash
-  run: |
-    packages="$(go list ./... 2>/dev/null || true)"
-    if [ -z "$packages" ]; then
-      echo "No Go packages yet; skipping go vet."
-      exit 0
-    fi
-    go vet ./...
+      - name: Check for Go packages
+        id: packages
+        shell: bash
+        run: |
+          if [ -n "$(go list ./... 2>/dev/null)" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No Go packages exist yet."
+          fi
 
-- name: Run tests
-  shell: bash
-  run: |
-    packages="$(go list ./... 2>/dev/null || true)"
-    if [ -z "$packages" ]; then
-      echo "No Go packages yet; skipping tests."
-      exit 0
-    fi
-    go test ./...
+      - name: Run go vet
+        if: steps.packages.outputs.exists == 'true'
+        run: go vet ./...
+
+      - name: Run tests
+        if: steps.packages.outputs.exists == 'true'
+        run: go test ./...
