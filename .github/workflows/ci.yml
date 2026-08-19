@@ -48,3 +48,7 @@ jobs:
       - name: Run tests
         if: steps.packages.outputs.exists == 'true'
         run: go test ./...
+
+      - name: Run race detector
+        if: steps.packages.outputs.exists == 'true'
+        run: go test -race ./...
